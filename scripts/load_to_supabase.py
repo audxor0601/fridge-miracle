@@ -208,7 +208,7 @@ def main() -> None:
     print("\n[검증] 실제 DB 건수")
     for t in ["recipes", "recipe_steps", "ingredients", "recipe_ingredients"]:
         req = urllib.request.Request(
-            f"{URL}/rest/v1/{t}?select=id&limit=1",
+            f"{URL}/rest/v1/{t}?select=*&limit=1",   # recipe_steps에는 id 컬럼이 없다
             headers={**HEADERS, "Prefer": "count=exact", "Range-Unit": "items", "Range": "0-0"},
         )
         with urllib.request.urlopen(req, timeout=TIMEOUT) as res:
