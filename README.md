@@ -45,7 +45,7 @@ npm run dev
 ## 진행 상황
 
 - [x] Step 0 — 저장소·개발 환경
-- [ ] Step 1 — Supabase 프로젝트 + 스키마
+- [x] Step 1 — Supabase 프로젝트 + 스키마 (테이블 7 / 정책 11 적용 확인)
 - [ ] Step 2 — 레시피 수집
 - [ ] Step 3 — 재료 파싱 (정확도 85% 이상)
 - [ ] Step 4 — 인증
