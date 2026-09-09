@@ -1,32 +1,67 @@
-# React + TypeScript + Vite
+# 냉장고의기적 2.0
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+냉장고 재고를 등록해두면, 유통기한이 급한 재료부터 소비하도록 실제 레시피를 추천하고 상하기 전에 알려주는 웹 서비스.
 
-Currently, two official plugins are available:
+## 왜 2.0인가
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1.0은 학교 과제로 만든 설계서 검토용 프로토타입이었다. 화면에는 "Random Forest 정확도 88.4%"가 떠 있었지만 실제로는 `Math.random()`이 만든 숫자였고, 데이터는 상수 4건에 새로고침하면 사라졌다.
 
-## React Compiler
+2.0의 목표는 기능 추가가 아니라 **화면에 표시된 것과 실제 동작이 일치하는 서비스**를 만드는 것이다.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| | 1.0 | 2.0 |
+|---|---|---|
+| 데이터 | 상수 4건, 새로고침 시 소멸 | Supabase Postgres |
+| 레시피 | 하드코딩 배열 | 식약처 공공 API 수집·정제 |
+| 추천 | `Math.random()` | 규칙 기반 + 유통기한 가중치 (설명 가능) |
+| 사용자 | 없음 | 이메일 인증 + RLS 격리 |
+| 성능 지표 | 지어낸 수치 | 실측치만 게시 |
 
-## Expanding the Oxlint configuration
+## 기술 스택
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+- **프론트**: React 19, Vite, TypeScript, Tailwind CSS v4
+- **백엔드**: Supabase (Postgres, Auth, RLS, Edge Functions)
+- **데이터 수집**: Python (식약처 조리식품 레시피 DB, COOKRCP01)
+- **배포**: Vercel
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## 추천 점수 공식
+
+```
+urgency(i)      = 1 / (남은일수 + 1)
+coverage(r)     = 보유한 필수재료 수 / 레시피 필수재료 수
+urgency_norm(r) = min(Σ urgency(보유재료) / 필수재료 수, 1)
+
+score(r) = 100 × (0.65 × coverage + 0.35 × urgency_norm)
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+커버리지 50% 미만은 추천에서 제외한다. 가중치 0.65 / 0.35는 실제 재고로 검증하며 조정한다.
+
+## 로컬 실행
+
+```bash
+npm install
+npm run dev
+```
+
+## 진행 상황
+
+- [x] Step 0 — 저장소·개발 환경
+- [ ] Step 1 — Supabase 프로젝트 + 스키마
+- [ ] Step 2 — 레시피 수집
+- [ ] Step 3 — 재료 파싱 (정확도 85% 이상)
+- [ ] Step 4 — 인증
+- [ ] Step 5 — 재고 CRUD + RLS 검증
+- [ ] Step 6 — 유통기한 대시보드
+- [ ] Step 7 — 추천 엔진
+- [ ] Step 8 — 이메일 다이제스트
+- [ ] Step 9 — 배포
+
+전체 설계는 [docs/설계서_v0.1.md](docs/설계서_v0.1.md) 참고.
+
+## 막혔던 문제와 해결
+
+<!--
+  이 항목은 직접 작성한다. 막힌 지점, 원인을 찾은 과정, 해결 방법을 자기 문장으로.
+  설계서 9장에 예상 지점을 미리 적어두었다.
+-->
+
+_작성 예정_
