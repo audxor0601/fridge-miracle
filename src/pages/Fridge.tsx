@@ -7,7 +7,7 @@ export default function Fridge() {
     <div className="mx-auto max-w-3xl px-5 py-10">
       <header className="mb-10 flex items-center justify-between border-b border-line pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-sage">내 냉장고</h1>
+          <h1 className="text-2xl font-bold text-sage">나의 냉장고</h1>
           <p className="mt-1 text-sm text-muted">{user?.email}</p>
         </div>
         <button
