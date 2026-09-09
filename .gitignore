@@ -33,3 +33,6 @@ data/raw/*.json
 # 파이썬
 __pycache__/
 *.pyc
+
+# 파싱 중간 산출물 (스크립트로 재생성 가능)
+data/processed/*.json
