@@ -1,11 +1,41 @@
+import { useCallback, useEffect, useState } from 'react'
+import AddItemForm from '../components/AddItemForm'
+import ItemList from '../components/ItemList'
 import { useAuth } from '../lib/auth'
+import { listItems, removeItem, setStatus } from '../lib/storage'
+import type { StorageItem } from '../lib/types'
 
 export default function Fridge() {
   const { user, signOut } = useAuth()
+  const [items, setItems] = useState<StorageItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const load = useCallback(async () => {
+    try {
+      setItems(await listItems('active'))
+      setError(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { void load() }, [load])
+
+  async function act(fn: () => Promise<void>) {
+    try {
+      await fn()
+      await load()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    }
+  }
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-10">
-      <header className="mb-10 flex items-center justify-between border-b border-line pb-5">
+    <div className="mx-auto max-w-2xl px-5 py-10">
+      <header className="mb-8 flex items-center justify-between border-b border-line pb-5">
         <div>
           <h1 className="text-2xl font-bold text-sage">나의 냉장고</h1>
           <p className="mt-1 text-sm text-muted">{user?.email}</p>
@@ -18,14 +48,24 @@ export default function Fridge() {
         </button>
       </header>
 
-      <div className="rounded-2xl border border-dashed border-line bg-surface/60 p-12 text-center">
-        <p className="text-sm text-muted">
-          재고 등록은 Step 5에서 붙입니다.
-        </p>
-        <p className="mt-2 text-xs text-muted">
-          레시피 1,156건 · 재료 사전 1,936개는 이미 DB에 있습니다.
-        </p>
+      {error && (
+        <p className="mb-5 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>
+      )}
+
+      <div className="mb-8">
+        <AddItemForm userId={user!.id} onAdded={load} />
       </div>
+
+      {loading ? (
+        <p className="text-sm text-muted">불러오는 중...</p>
+      ) : (
+        <ItemList
+          items={items}
+          onConsume={(id) => act(() => setStatus(id, 'consumed'))}
+          onDiscard={(id) => act(() => setStatus(id, 'discarded'))}
+          onDelete={(id) => act(() => removeItem(id))}
+        />
+      )}
     </div>
   )
 }
