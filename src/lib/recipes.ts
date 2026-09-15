@@ -1,4 +1,4 @@
-import { scoreRecipes, type PantryItem, type Scored } from './recommend'
+import { expandPantry, scoreRecipes, type PantryItem, type Scored } from './recommend'
 import { supabase } from './supabase'
 import { listItems } from './storage'
 
@@ -11,7 +11,25 @@ export type RecipeCard = Scored & {
   way: string | null
   kcal: number | null
   imageUrl: string | null
-  missingNames: string[]
+  missingMainNames: string[]
+  missingMinorNames: string[]
+}
+
+/** PostgREST는 한 번에 1000행까지만 주므로 나눠 받는다. */
+async function fetchDictionary(): Promise<{ id: number; name: string; category: string }[]> {
+  const out: { id: number; name: string; category: string }[] = []
+  const PAGE = 1000
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from('ingredients')
+      .select('id, name, category')
+      .order('id')
+      .range(from, from + PAGE - 1)
+    if (error) throw error
+    out.push(...(data ?? []))
+    if (!data || data.length < PAGE) break
+  }
+  return out
 }
 
 export async function recommend(limit = 20): Promise<{
@@ -26,7 +44,10 @@ export async function recommend(limit = 20): Promise<{
   }))
   if (pantry.length === 0) return { cards: [], pantry }
 
-  const myIds = [...new Set(pantry.map((p) => p.ingredientId))]
+  // 0) 재료 사전 전체를 받아 상위 재료까지 넓힌다 (1,594행, 한 번이면 충분)
+  const dictionary = await fetchDictionary()
+  const owned = expandPantry(pantry, dictionary)
+  const myIds = [...owned.keys()]
 
   // 1) 내 재료가 필수로 들어가는 레시피 찾기
   const { data: hits, error: e1 } = await supabase
@@ -49,13 +70,13 @@ export async function recommend(limit = 20): Promise<{
   // 2) 후보들의 필수재료 전체 (커버리지 분모)
   const { data: essential, error: e2 } = await supabase
     .from('recipe_ingredients')
-    .select('recipe_id, ingredient_id')
+    .select('recipe_id, ingredient_id, qty')
     .in('recipe_id', candidates)
     .eq('is_essential', true)
     .not('ingredient_id', 'is', null)
   if (e2) throw e2
 
-  const scored = scoreRecipes(pantry, essential as { recipe_id: number; ingredient_id: number }[])
+  const scored = scoreRecipes(owned, (essential ?? []) as { recipe_id: number; ingredient_id: number; qty: number | null }[])
   const top = scored.slice(0, limit)
   if (top.length === 0) return { cards: [], pantry }
 
@@ -68,7 +89,10 @@ export async function recommend(limit = 20): Promise<{
     supabase
       .from('ingredients')
       .select('id, name')
-      .in('id', [...new Set(top.flatMap((t) => t.missingIds))].slice(0, 500)),
+      .in(
+        'id',
+        [...new Set(top.flatMap((t) => [...t.missingMainIds, ...t.missingMinorIds]))].slice(0, 500),
+      ),
   ])
 
   const recipeById = new Map((recipes ?? []).map((r) => [r.id, r]))
@@ -85,7 +109,8 @@ export async function recommend(limit = 20): Promise<{
         way: r?.way ?? null,
         kcal: r?.kcal ?? null,
         imageUrl: r?.image_url ?? null,
-        missingNames: t.missingIds.map((id) => nameById.get(id)).filter(Boolean) as string[],
+        missingMainNames: t.missingMainIds.map((id) => nameById.get(id)).filter(Boolean) as string[],
+        missingMinorNames: t.missingMinorIds.map((id) => nameById.get(id)).filter(Boolean) as string[],
       }
     }),
   }
