@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import AddItemForm from '../components/AddItemForm'
 import ItemList from '../components/ItemList'
 import { useAuth } from '../lib/auth'
@@ -40,12 +41,20 @@ export default function Fridge() {
           <h1 className="text-2xl font-bold text-sage">나의 냉장고</h1>
           <p className="mt-1 text-sm text-muted">{user?.email}</p>
         </div>
+        <div className="flex items-center gap-2">
+        <Link
+          to="/recipes"
+          className="rounded-lg bg-sage px-4 py-2 text-sm font-bold text-white transition hover:bg-sage-dark"
+        >
+          오늘 뭐 먹지
+        </Link>
         <button
           onClick={signOut}
           className="rounded-lg border border-line px-4 py-2 text-sm text-muted transition hover:border-sage hover:text-sage"
         >
           로그아웃
         </button>
+        </div>
       </header>
 
       {error && (
