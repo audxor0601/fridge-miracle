@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchRecipe, getOwnedMap, type RecipeDetail as Detail } from '../lib/recipes'
+import { youtubeQuery, youtubeSearchUrl } from '../lib/youtube'
 
 export default function RecipeDetail() {
   const { id } = useParams()
@@ -80,6 +81,30 @@ export default function RecipeDetail() {
       </section>
 
       <section className="mt-8">
+        {/* 조리 단계를 읽기 시작하는 지점에 둔다. 원본이 6단계에서 잘려 있어
+            "영상으로 보면 낫겠다" 싶어지는 자리가 정확히 여기다. */}
+        <a
+          href={youtubeSearchUrl(recipe.name)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-5 py-4 transition hover:border-sage"
+        >
+          <span className="flex items-center gap-3">
+            <span className="flex h-8 w-11 shrink-0 items-center justify-center rounded-lg bg-danger/90">
+              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-white" aria-hidden>
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </span>
+            <span>
+              <span className="block text-sm font-bold">보면서 따라 만들기</span>
+              <span className="block text-xs text-muted">
+                유튜브에서 "{youtubeQuery(recipe.name)}" 검색
+              </span>
+            </span>
+          </span>
+          <span className="shrink-0 text-xs text-muted">새 탭 ↗</span>
+        </a>
+
         <h2 className="mb-3 text-base font-bold">만드는 법</h2>
         <ol className="space-y-3">
           {recipe.steps.map((s) => (
