@@ -32,8 +32,12 @@ async function fetchDictionary(): Promise<{ id: number; name: string; category: 
   return out
 }
 
-export async function recommend(limit = 20): Promise<{
-  cards: RecipeCard[]
+/**
+ * 내 재고를 '보유로 인정되는 재료 id' 맵으로 바꾼다.
+ * 목록과 상세가 같은 판정을 쓰도록 여기 한 곳에 둔다.
+ */
+export async function getOwnedMap(): Promise<{
+  owned: Map<number, PantryItem | null>
   pantry: PantryItem[]
 }> {
   const items = await listItems('active')
@@ -42,11 +46,17 @@ export async function recommend(limit = 20): Promise<{
     name: i.ingredients?.name ?? '',
     expiresOn: i.expires_on,
   }))
-  if (pantry.length === 0) return { cards: [], pantry }
-
-  // 0) 재료 사전 전체를 받아 상위 재료까지 넓힌다 (1,594행, 한 번이면 충분)
+  if (pantry.length === 0) return { owned: new Map(), pantry }
   const dictionary = await fetchDictionary()
-  const owned = expandPantry(pantry, dictionary)
+  return { owned: expandPantry(pantry, dictionary), pantry }
+}
+
+export async function recommend(limit = 20): Promise<{
+  cards: RecipeCard[]
+  pantry: PantryItem[]
+}> {
+  const { owned, pantry } = await getOwnedMap()
+  if (pantry.length === 0) return { cards: [], pantry }
   const myIds = [...owned.keys()]
 
   // 1) 내 재료가 필수로 들어가는 레시피 찾기

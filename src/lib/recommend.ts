@@ -27,6 +27,13 @@ export const MAX_MISSING_MAIN = 2
  */
 export const SUBSTITUTABLE = ['돼지고기', '소고기', '쇠고기', '닭고기', '생선살', '흰살생선', '고기']
 
+/**
+ * 이 카테고리 안에서는 부위가 달라도 서로 대신한다.
+ * 삼겹살 대신 목살로 구워도 요리는 된다.
+ * 해물류는 넣지 않았다. 새우 자리에 오징어를 넣으면 다른 음식이 된다.
+ */
+export const INTERCHANGEABLE_CATEGORIES = ['돼지고기', '소고기', '닭고기']
+
 /** 사실상 물. 쌀뜨물 300g이 부족하다고 요리를 포기할 사람은 없다 */
 export const WATERY = [
   '쌀뜨물', '육수', '물', '채수', '다시마육수', '멸치육수',
@@ -99,8 +106,10 @@ export function expandPantry(
     if (c && c !== '기타' && !myCategories.has(c)) myCategories.set(c, item)
   }
   for (const entry of dictionary) {
-    if (!SUBSTITUTABLE.includes(entry.name)) continue
     const c = entry.category ?? '기타'
+    const generic = SUBSTITUTABLE.includes(entry.name)
+    const sameMeat = INTERCHANGEABLE_CATEGORIES.includes(c)
+    if (!generic && !sameMeat) continue
     const stand = myCategories.get(c)
     if (stand && !out.has(entry.id)) out.set(entry.id, stand)
   }

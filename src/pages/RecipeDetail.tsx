@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { fetchRecipe, type RecipeDetail as Detail } from '../lib/recipes'
-import { listItems } from '../lib/storage'
+import { fetchRecipe, getOwnedMap, type RecipeDetail as Detail } from '../lib/recipes'
 
 export default function RecipeDetail() {
   const { id } = useParams()
@@ -11,10 +10,11 @@ export default function RecipeDetail() {
 
   useEffect(() => {
     if (!id) return
-    Promise.all([fetchRecipe(Number(id)), listItems('active')])
-      .then(([r, items]) => {
+    // 목록과 같은 판정을 쓴다. 순두부를 두부로 쳤으면 상세에서도 그래야 한다.
+    Promise.all([fetchRecipe(Number(id)), getOwnedMap()])
+      .then(([r, { owned }]) => {
         setRecipe(r)
-        setMine(new Set(items.map((i) => i.ingredient_id)))
+        setMine(new Set(owned.keys()))
       })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)))
   }, [id])
