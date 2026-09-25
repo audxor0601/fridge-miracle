@@ -5,6 +5,7 @@ import Fridge from './pages/Fridge'
 import Login from './pages/Login'
 import RecipeDetail from './pages/RecipeDetail'
 import Recipes from './pages/Recipes'
+import Waste from './pages/Waste'
 
 export default function App() {
   const { session, loading } = useAuth()
@@ -33,6 +34,7 @@ export default function App() {
       <Route path="/recipes" element={<Recipes />} />
       <Route path="/recipes/:id" element={<RecipeDetail />} />
       <Route path="/about" element={<About />} />
+      <Route path="/waste" element={<Waste />} />
       <Route path="*" element={<Navigate to="/fridge" replace />} />
     </Routes>
   )

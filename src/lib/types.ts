@@ -19,6 +19,8 @@ export type StorageItem = {
   expires_on: string | null
   status: ItemStatus
   memo: string | null
+  /** 상태가 바뀐 시각. 먹음·버림 처리한 시점이 여기 찍힌다 (storage_items_touch 트리거) */
+  updated_at: string
   /** 조인해서 같이 받아오는 재료 정보 */
   ingredients: Pick<Ingredient, 'name' | 'category' | 'is_seasoning'> | null
 }

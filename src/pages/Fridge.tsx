@@ -50,6 +50,12 @@ export default function Fridge() {
           오늘 뭐 먹지
         </Link>
         <Link
+          to="/waste"
+          className="rounded-lg border border-line px-4 py-2 text-sm text-muted transition hover:border-sage hover:text-sage"
+        >
+          버린 것
+        </Link>
+        <Link
           to="/about"
           className="rounded-lg border border-line px-4 py-2 text-sm text-muted transition hover:border-sage hover:text-sage"
         >
