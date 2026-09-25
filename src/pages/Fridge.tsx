@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AddItemForm from '../components/AddItemForm'
+import ExpiredBanner from '../components/ExpiredBanner'
 import ItemList from '../components/ItemList'
 import { useAuth } from '../lib/auth'
 import { listItems, removeItem, setStatus } from '../lib/storage'
@@ -48,6 +49,12 @@ export default function Fridge() {
         >
           오늘 뭐 먹지
         </Link>
+        <Link
+          to="/about"
+          className="rounded-lg border border-line px-4 py-2 text-sm text-muted transition hover:border-sage hover:text-sage"
+        >
+          지표
+        </Link>
         <button
           onClick={signOut}
           className="rounded-lg border border-line px-4 py-2 text-sm text-muted transition hover:border-sage hover:text-sage"
@@ -60,6 +67,8 @@ export default function Fridge() {
       {error && (
         <p className="mb-5 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>
       )}
+
+      <ExpiredBanner items={items} onDiscard={(id) => act(() => setStatus(id, 'discarded'))} />
 
       <div className="mb-8">
         <AddItemForm userId={user!.id} onAdded={load} />

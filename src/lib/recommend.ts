@@ -65,6 +65,14 @@ export type Scored = {
   essentialCount: number
 }
 
+/**
+ * 급한 정도. 1.0에서 그대로 가져온 공식이다.
+ *
+ * d < 0 → 1 은 원래 "기한이 지난 건 제일 급하다"는 뜻이었는데, 그 해석이
+ * 8일 지난 순두부를 추천 1순위로 올렸다. 지금은 기한 지난 재료를
+ * getOwnedMap에서 미리 걸러내므로 이 분기는 추천 경로에서 안 쓰인다.
+ * 방어용으로만 남겨둔다.
+ */
 export function urgencyOf(expiresOn: string | null): number {
   const d = daysLeft(expiresOn)
   if (d === null) return 0
