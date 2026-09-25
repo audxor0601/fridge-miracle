@@ -3,6 +3,21 @@ import { supabase } from '../lib/supabase'
 
 type Mode = 'signin' | 'signup'
 
+/**
+ * 둘러보기 계정.
+ *
+ * 배포 링크로 들어온 사람에게 가입부터 시키면 대부분 여기서 나간다. 그런데
+ * 빈 냉장고로는 추천도 지표도 보여줄 게 없다. 그래서 재료가 채워진 계정을
+ * 하나 열어둔다 (scripts/seed_demo.py).
+ *
+ * 비밀번호가 번들에 실린다. 일부러 공개하는 값이라 괜찮다 — 이 계정으로
+ * 볼 수 있는 건 이 계정의 행뿐이고, 그걸 막는 건 비밀번호가 아니라 RLS다.
+ * 저장소에는 값을 두지 않고 배포 환경변수로만 넣는다. 둘 중 하나라도 없으면
+ * 이 버튼은 아예 그려지지 않는다.
+ */
+const DEMO_EMAIL = import.meta.env.VITE_DEMO_EMAIL as string | undefined
+const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD as string | undefined
+
 export default function Login() {
   const [mode, setMode] = useState<Mode>('signin')
   const [email, setEmail] = useState('')
@@ -10,6 +25,19 @@ export default function Login() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+
+  async function handleDemo() {
+    if (!DEMO_EMAIL || !DEMO_PASSWORD) return
+    setBusy(true)
+    setError(null)
+    setNotice(null)
+    const { error } = await supabase.auth.signInWithPassword({
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+    })
+    if (error) setError(translate(error.message))
+    setBusy(false)
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -101,6 +129,29 @@ export default function Login() {
           >
             {busy ? '처리 중...' : mode === 'signin' ? '로그인' : '가입하기'}
           </button>
+
+          {DEMO_EMAIL && DEMO_PASSWORD && (
+            <>
+              <div className="my-5 flex items-center gap-3">
+                <span className="h-px flex-1 bg-line" />
+                <span className="text-xs text-muted">또는</span>
+                <span className="h-px flex-1 bg-line" />
+              </div>
+              <button
+                type="button"
+                onClick={handleDemo}
+                disabled={busy}
+                className="w-full rounded-lg border border-sage px-4 py-3 text-sm font-bold text-sage transition hover:bg-sage/5 disabled:opacity-50"
+              >
+                가입 없이 둘러보기
+              </button>
+              <p className="mt-2 text-center text-xs leading-relaxed text-muted">
+                재료가 채워진 데모 계정으로 들어갑니다.
+                <br />
+                누구나 쓰는 계정이라 남이 바꿔둔 상태가 보일 수 있습니다.
+              </p>
+            </>
+          )}
         </form>
       </div>
     </div>
