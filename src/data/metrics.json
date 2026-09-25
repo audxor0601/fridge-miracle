@@ -1,0 +1,40 @@
+{
+  "measuredAt": "2026-09-25",
+  "commit": "f057ad0",
+  "collect": {
+    "source": "식품의약품안전처 조리식품의 레시피 DB (COOKRCP01)",
+    "script": "scripts/fetch_recipes.py",
+    "recipes": 1156,
+    "duplicateSeq": 0,
+    "avgSteps": 5.8,
+    "hashtagMissingPct": 69.1
+  },
+  "parse": {
+    "script": "scripts/parse_ingredients.py",
+    "rows": 13086,
+    "withQtyPct": 97.9,
+    "uniqueNames": 1695,
+    "essentialPerRecipe": 8.7
+  },
+  "verify": {
+    "how": "파싱한 재료 이름이 해당 레시피 원문에 글자 그대로 들어 있는지 전수 대조 (공백 무시)",
+    "script": "scripts/build_metrics.py",
+    "checked": 13086,
+    "passed": 13086,
+    "passRate": 100.0,
+    "failSamples": []
+  },
+  "residue": {
+    "how": "이름에 수량·괄호·콜론 같은 찌꺼기가 남았는지 검사. 원문 대조만으로는 '마늘 1'을 못 걸러서 따로 만들었다",
+    "script": "scripts/build_metrics.py",
+    "checked": 13086,
+    "passed": 13085,
+    "passRate": 99.99,
+    "failSamples": [
+      {
+        "name": "물(15m",
+        "raw": "물(15m"
+      }
+    ]
+  }
+}
