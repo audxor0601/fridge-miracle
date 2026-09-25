@@ -67,7 +67,13 @@ function buildEmail(items: Item[], todayKst: string) {
   const expired = sorted.filter((i) => daysLeft(i.expires_on, todayKst) < 0)
   const soon = sorted.filter((i) => daysLeft(i.expires_on, todayKst) >= 0)
 
-  const head = soon[0] ?? expired[0]
+  // 제목은 가장 급한 것부터. sorted가 기한 오름차순이므로 sorted[0]이 제일 급하다.
+  //
+  // 처음에는 아직 안 지난 것(soon[0])을 앞세웠다. 기한이 지난 건 먹을 게 아니니
+  // 제목에 올릴 이유가 없다고 봤다. 그런데 냉장고 화면은 지난 것을 맨 위 빨간
+  // 배너에 올린다. 메일만 반대로 말하면 같은 상태를 두 화면이 다르게 말하는 것이고,
+  // 무엇보다 나쁜 소식을 제목에서 감추게 된다.
+  const head = sorted[0]
   const rest = items.length - 1
   const subject =
     rest > 0
