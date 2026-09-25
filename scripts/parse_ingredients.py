@@ -57,7 +57,7 @@ PREFIX_STRIP = ["저염", "무염", "무가당", "저지방", "국내산", "냉�
 
 UNITS = (
     "kg|g|ml|L|리터|개|장|줄기|모|마리|쪽|톨|컵|큰술|작은술|스푼|봉지|캔|알|"
-    "자밤|꼬집|조각|대|포기|송이|꼬치|묶음|팩|병|숟갈|T|t"
+    "자밤|꼬집|조각|대|포기|송이|꼬치|묶음|팩|병|숟갈|T|t|㎖|㎗|㎘|㏄|cc"
 )
 FRACTIONS = {
     "½": 0.5, "⅓": 1 / 3, "⅔": 2 / 3, "¼": 0.25, "¾": 0.75,
@@ -68,6 +68,30 @@ FRACTIONS = {
 _FRAC = "".join(FRACTIONS)
 QTY_RE = re.compile(rf"(\d+(?:[./]\d+)?[{_FRAC}]?|[{_FRAC}])\s*({UNITS})")
 VAGUE_RE = re.compile(r"(약간|적당량|조금|기호에\s*따라)")
+# 단위 없이 숫자만 적은 원문("배추김치(줄기부분) 30")의 끝자리 수량
+BARE_QTY_RE = re.compile(r"(\d+(?:[./]\d+)?)\s*$")
+# 여러 색·종류를 한 번에 적을 때 붙는 꼬리("파프리카(빨강, 노랑) 각 7g")
+EACH_TAIL_RE = re.compile(r"\s*(각각|각|씩)\s*$")
+
+
+def mask_parens(text: str) -> str:
+    """괄호 안을 같은 길이의 공백으로 덮는다. 위치(인덱스)는 그대로 유지된다.
+
+    수량을 찾을 때 괄호 밖을 먼저 봐야 한다. 안 그러면 '녹차(티백, 1개)'에서
+    괄호 안의 '1개'가 수량으로 잡히고, 이름이 '녹차(티백,' 이 되어 버린다.
+    실제로 이 버그로 107개 이름이 깨져 있었다.
+    """
+    out, depth = [], 0
+    for ch in text:
+        if ch in "([{":
+            depth += 1
+            out.append(" ")
+        elif ch in ")]}":
+            depth = max(0, depth - 1)
+            out.append(" ")
+        else:
+            out.append(" " if depth else ch)
+    return "".join(out)
 
 
 def to_number(token: str) -> float | None:
@@ -124,8 +148,41 @@ def split_items(text: str) -> list[str]:
             head, tail = line.split(":", 1)
             if len(head.strip()) <= 12:      # 긴 문장은 콜론이 있어도 제목이 아니다
                 line = tail
-        items += [c for c in _split_outside_parens(line) if c]
-    return items
+        for c in _split_outside_parens(line):
+            items += _split_sections(c)
+    return [i for i in items if i]
+
+
+# 여는 괄호 없이 ')' 로 끝나는 머리말 — "속재료)  고구마 30g"
+ORPHAN_CLOSE_RE = re.compile(r"^[^()]{1,14}\)\s*")
+
+
+def _split_sections(item: str) -> list[str]:
+    """항목 하나가 사실은 '재료 + 다음 섹션 제목 + 재료' 인 경우를 더 자른다.
+
+    원문에 '다진 실파 2 양념장: 간장 3' 처럼 섹션 제목이 줄 중간에서 시작하는
+    경우가 있다. 줄 단위 콜론 규칙은 제목이 줄 맨 앞에 올 때만 동작해서
+    여기서 한 번 더 본다.
+    """
+    item = item.strip()
+    if not item:
+        return []
+
+    # 짝 없는 ')' 앞은 머리말이다. "속재료) 고구마" → "고구마"
+    if ")" in item and item.index(")") < (item.index("(") if "(" in item else len(item)):
+        item = ORPHAN_CLOSE_RE.sub("", item, count=1).strip()
+
+    if ":" not in item:
+        return [item]
+
+    head, tail = item.split(":", 1)
+    head = head.strip()
+    # 머리 끝에 붙은 섹션 제목을 떼면 앞 재료만 남는다
+    for w in sorted(SECTION_WORDS, key=len, reverse=True):
+        if head.endswith(w):
+            head = head[: -len(w)].strip()
+            break
+    return [x for x in (head, tail.strip()) if x]
 
 
 def normalize_name(raw: str) -> str:
@@ -149,6 +206,9 @@ def normalize_name(raw: str) -> str:
     for p in PREFIX_STRIP:
         if name.startswith(p) and len(name) > len(p) + 1:
             name = name[len(p):].strip()
+    # '각 7g'의 '각'은 재료명이 아니다. 단, 팔각은 향신료 이름이므로 건드리지 않는다
+    if name != "팔각":
+        name = EACH_TAIL_RE.sub("", name)
     return re.sub(r"\s+", " ", name).strip()
 
 
@@ -158,26 +218,49 @@ def parse_item(item: str) -> dict | None:
     if not item or len(item) > 60:
         return None
 
-    m = QTY_RE.search(item)
+    masked = mask_parens(item)
+    paren_at = item.find("(")
+    cut = paren_at if paren_at >= 0 else len(item)
+
+    # 수량은 괄호 밖에서 먼저 찾는다 ("연두부 75g(3/4모)" → 75g)
+    m = QTY_RE.search(masked)
+    if m:
+        name_end, qty, unit = m.start(), to_number(m.group(1)), m.group(2)
+    else:
+        # 밖에 없으면 괄호 안을 본다 ("오이(55g)" → 55g, 이름은 괄호 앞까지)
+        m = QTY_RE.search(item)
+        if m:
+            name_end, qty, unit = cut, to_number(m.group(1)), m.group(2)
+        else:
+            # 단위 없이 숫자만 적은 경우 ("배추김치(줄기부분) 30" → 30)
+            m = BARE_QTY_RE.search(masked.rstrip())
+            if m:
+                name_end, qty, unit = min(cut, m.start()), to_number(m.group(1)), None
+            else:
+                name_end, qty, unit = None, None, None
 
     # 수량이 붙어 있으면 제목이 아니라 재료다 ("육수(200g)" vs 제목 "육수")
     plain = re.sub(r"\([^)]*\)", "", item).strip(" ·-–—:[]()")
-    if m is None and (plain in SECTION_WORDS or plain.rstrip("장") in SECTION_WORDS):
+    if qty is None and (plain in SECTION_WORDS or plain.rstrip("장") in SECTION_WORDS):
         return None
 
     vague = bool(VAGUE_RE.search(item))
 
-    if m:
-        name_part = item[: m.start()]
-        qty, unit = to_number(m.group(1)), m.group(2)
+    if name_end is not None:
+        name_part = item[:name_end]
     elif vague:
         name_part = VAGUE_RE.split(item)[0]
-        qty, unit = None, None
     else:
-        name_part, qty, unit = item, None, None
+        name_part = item
 
     name = normalize_name(name_part)
-    if not name or (m is None and name in SECTION_WORDS):
+    # 괄호가 안 닫힌 원문("마늘 15(3개")에서는 이름 끝에 수량이 남는다
+    tail_num = BARE_QTY_RE.search(name)
+    if tail_num and re.search(r"[가-힣A-Za-z]", name[: tail_num.start()]):
+        if qty is None:
+            qty = to_number(tail_num.group(1))
+        name = name[: tail_num.start()].strip()
+    if not name or (qty is None and name in SECTION_WORDS):
         return None
     if not re.search(r"[가-힣A-Za-z]", name):
         return None
