@@ -1,0 +1,6 @@
+# Supabase CLI 설정. 로컬 개발 스택은 쓰지 않고 Edge Function 배포에만 쓴다.
+project_id = "hzcktczgpvsperrwihff"
+
+[functions.expiry-digest]
+# Cron이 사용자 JWT 없이 부른다. 대신 함수가 x-digest-secret 헤더를 직접 검사한다.
+verify_jwt = false

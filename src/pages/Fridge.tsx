@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AddItemForm from '../components/AddItemForm'
 import ExpiredBanner from '../components/ExpiredBanner'
+import NotifySettings from '../components/NotifySettings'
 import ItemList from '../components/ItemList'
 import { useAuth } from '../lib/auth'
 import { listItems, removeItem, setStatus } from '../lib/storage'
@@ -90,6 +91,8 @@ export default function Fridge() {
           onDelete={(id) => act(() => removeItem(id))}
         />
       )}
+
+      <NotifySettings />
     </div>
   )
 }
