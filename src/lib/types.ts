@@ -25,4 +25,14 @@ export type StorageItem = {
   ingredients: Pick<Ingredient, 'name' | 'category' | 'is_seasoning'> | null
 }
 
-export const UNITS = ['g', 'ml', '개', '장', '컵', '큰술', '작은술', '봉지', '마리'] as const
+/**
+ * 재고 등록 화면의 단위 목록.
+ *
+ * 무게(g/kg) → 부피(ml/L) → 개수 세는 말 순서로 둔다.
+ * kg과 L이 빠져 있었다. 쌀 2kg, 우유 1L처럼 큰 단위로 사는 것들이 있는데
+ * g와 ml만 있으면 2000, 1000을 직접 계산해서 넣어야 했다.
+ */
+export const UNITS = [
+  'g', 'kg', 'ml', 'L',
+  '개', '장', '컵', '큰술', '작은술', '봉지', '마리', '모', '쪽', '단', '팩', '병',
+] as const
