@@ -1,15 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import AddItemForm from '../components/AddItemForm'
 import ExpiredBanner from '../components/ExpiredBanner'
-import NotifySettings from '../components/NotifySettings'
 import ItemList from '../components/ItemList'
 import { useAuth } from '../lib/auth'
 import { listItems, removeItem, setStatus } from '../lib/storage'
 import type { StorageItem } from '../lib/types'
 
 export default function Fridge() {
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const [items, setItems] = useState<StorageItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -37,38 +35,9 @@ export default function Fridge() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-5 py-10">
-      <header className="mb-8 flex items-center justify-between border-b border-line pb-5">
-        <div>
-          <h1 className="text-2xl font-bold text-sage">나의 냉장고</h1>
-          <p className="mt-1 text-sm text-muted">{user?.email}</p>
-        </div>
-        <div className="flex items-center gap-2">
-        <Link
-          to="/recipes"
-          className="rounded-lg bg-sage px-4 py-2 text-sm font-bold text-white transition hover:bg-sage-dark"
-        >
-          오늘 뭐 먹지
-        </Link>
-        <Link
-          to="/waste"
-          className="rounded-lg border border-line px-4 py-2 text-sm text-muted transition hover:border-sage hover:text-sage"
-        >
-          버린 것
-        </Link>
-        <Link
-          to="/about"
-          className="rounded-lg border border-line px-4 py-2 text-sm text-muted transition hover:border-sage hover:text-sage"
-        >
-          지표
-        </Link>
-        <button
-          onClick={signOut}
-          className="rounded-lg border border-line px-4 py-2 text-sm text-muted transition hover:border-sage hover:text-sage"
-        >
-          로그아웃
-        </button>
-        </div>
+    <div className="mx-auto max-w-2xl px-5 pt-12 pb-6">
+      <header className="mb-6">
+        <h1 className="text-2xl">나의 냉장고</h1>
       </header>
 
       {error && (
@@ -92,7 +61,6 @@ export default function Fridge() {
         />
       )}
 
-      <NotifySettings />
     </div>
   )
 }

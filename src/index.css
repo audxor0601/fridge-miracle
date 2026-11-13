@@ -1,19 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap');
 @import "tailwindcss";
 
-/* 1.0의 Natural Tones 팔레트를 계승한다 */
+/*
+ * 2.1 디자인 (디자인 시안 '추천안 · B 프레시 개선판').
+ * 색 이름(sage, clay)은 기존 페이지 코드가 그대로 쓰고 있어서 이름은 두고 값만 바꿨다.
+ * 페이지를 하나씩 새 디자인으로 옮기면서 이름도 정리한다.
+ */
 @theme {
-  --color-canvas: #f8f5f2;   /* 대지 - 배경 */
-  --color-surface: #ffffff;
-  --color-sage: #6b705c;     /* 세이지 그린 - 주색 */
-  --color-sage-dark: #545847;
-  --color-clay: #b98b6b;     /* 점토 - 강조 */
-  --color-ink: #33312e;
-  --color-muted: #8a8378;
-  --color-line: #e6e0d8;
-  --color-danger: #b5544a;
+  --color-canvas: #f2f4f6;   /* 바탕 - 연회색 */
+  --color-surface: #ffffff;  /* 카드 */
+  --color-sage: #0b8043;     /* 주색 - 초록 */
+  --color-sage-dark: #086434;
+  --color-clay: #c2410c;     /* 강조 - 급한 재료 주황 */
+  --color-ink: #191f28;      /* 본문 글자 */
+  --color-muted: #5f6b78;    /* 보조 글자. #6b7684는 연회색 바탕에서 대비 4.19라 4.5 기준에 못 미쳐 한 단계 진하게 */
+  --color-line: #e5e8eb;
+  --color-danger: #b42318;
 
-  --font-serif: 'Noto Serif KR', Georgia, serif;
   --font-sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -22,5 +25,7 @@ body {
   background-color: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
 }
-h1, h2, h3 { font-family: var(--font-serif); }
+h1, h2, h3 { letter-spacing: -0.02em; }
+h1 { font-weight: 800; }
