@@ -85,7 +85,7 @@ export default function Fridge() {
 
       <button
         onClick={() => setAdding(true)}
-        className="fixed right-5 z-10 flex h-14 items-center gap-1.5 rounded-full bg-ink pl-4 pr-5 text-[15px] font-bold text-white shadow-[0_8px_22px_rgba(25,31,40,0.28)] bottom-[calc(84px+env(safe-area-inset-bottom))]"
+        className="fixed right-[max(20px,calc((100vw-42rem)/2+20px))] z-10 flex h-14 items-center gap-1.5 rounded-full bg-ink pl-4 pr-5 text-[15px] font-bold text-white shadow-[0_8px_22px_rgba(25,31,40,0.28)] bottom-[calc(84px+env(safe-area-inset-bottom))]"
       >
         <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" aria-hidden>
           <path d="M12 5v14M5 12h14" />
@@ -99,12 +99,20 @@ export default function Fridge() {
             role="dialog"
             aria-modal="true"
             aria-label="재료 넣기"
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-canvas p-4 pb-[calc(16px+env(safe-area-inset-bottom))]"
+            className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-surface px-5 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mb-2 flex justify-end">
-              <button onClick={() => setAdding(false)} className="h-11 px-3 text-sm text-muted">
-                닫기
+            <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-line" aria-hidden />
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-[22px] font-extrabold">재료 넣기</h2>
+              <button
+                onClick={() => setAdding(false)}
+                aria-label="닫기"
+                className="-mr-2 flex h-11 w-11 items-center justify-center text-[#4e5968]"
+              >
+                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
               </button>
             </div>
             <AddItemForm

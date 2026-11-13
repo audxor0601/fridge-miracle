@@ -41,6 +41,30 @@ export async function listItems(status: ItemStatus = 'active'): Promise<StorageI
   return (data ?? []) as StorageItem[]
 }
 
+/**
+ * 자주 넣는 재료. 내 재고 기록(먹음·버림 포함)에서 많이 넣은 순.
+ * 기록이 없으면 빈 배열 — 처음 쓰는 사람에게 남의 취향을 보여주지 않는다.
+ */
+export async function frequentIngredients(limit = 6): Promise<Ingredient[]> {
+  const { data, error } = await supabase
+    .from('storage_items')
+    .select('ingredient_id, ingredients(id, name, category, is_seasoning)')
+    .order('created_at', { ascending: false })
+    .limit(300)
+
+  if (error) throw error
+
+  const count = new Map<number, { ing: Ingredient; n: number }>()
+  for (const row of (data ?? []) as unknown as { ingredients: Ingredient | null }[]) {
+    const ing = row.ingredients
+    if (!ing) continue
+    const c = count.get(ing.id)
+    if (c) c.n += 1
+    else count.set(ing.id, { ing, n: 1 })
+  }
+  return [...count.values()].sort((a, b) => b.n - a.n).slice(0, limit).map((c) => c.ing)
+}
+
 export type NewItem = {
   ingredient_id: number
   qty: number | null
