@@ -1,8 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import AppLayout from './layout/AppLayout'
 import { useAuth } from './lib/auth'
 import About from './pages/About'
 import Fridge from './pages/Fridge'
 import Login from './pages/Login'
+import Me from './pages/Me'
 import RecipeDetail from './pages/RecipeDetail'
 import Recipes from './pages/Recipes'
 import Waste from './pages/Waste'
@@ -30,11 +32,14 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/fridge" element={<Fridge />} />
-      <Route path="/recipes" element={<Recipes />} />
-      <Route path="/recipes/:id" element={<RecipeDetail />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/waste" element={<Waste />} />
+      <Route element={<AppLayout />}>
+        <Route path="/fridge" element={<Fridge />} />
+        <Route path="/recipes" element={<Recipes />} />
+        <Route path="/recipes/:id" element={<RecipeDetail />} />
+        <Route path="/waste" element={<Waste />} />
+        <Route path="/me" element={<Me />} />
+        <Route path="/about" element={<About />} />
+      </Route>
       <Route path="*" element={<Navigate to="/fridge" replace />} />
     </Routes>
   )
